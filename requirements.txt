@@ -1,0 +1,8 @@
+groq
+sounddevice
+numpy
+soundfile
+faster-whisper
+piper-tts
+ddgs
+telethon
