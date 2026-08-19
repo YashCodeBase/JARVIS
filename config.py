@@ -1,35 +1,35 @@
 """
-Put your Groq API key(s) here. This is the ONLY file you need to edit to get
-Jarvis running -- no terminal exports needed.
+Loads all secrets/settings from a `.env` file (NOT committed to Git) via
+environment variables. This is the ONLY file the rest of Jarvis imports
+from, so nothing else in the project needs to change.
 
-Get free keys at: https://console.groq.com/keys
-(You can create multiple keys on the same account, or use keys from separate
-free accounts, to multiply your daily rate limit.)
-
-Add as many as you want -- Jarvis will automatically rotate to the next key
-whenever one hits a rate limit (HTTP 429).
-
-IMPORTANT: if you ever share this folder, back this file up with a backup
-tool, or push it to GitHub, delete/blank out your real keys first. Treat
-these like passwords.
+SETUP (do this once):
+1. Copy `.env.example` in this folder, rename the copy to `.env`
+2. Open `.env` and paste your real keys in there
+3. NEVER put real keys directly in this file (config.py) -- put them in `.env`
 """
 
-GROQ_API_KEYS = [
-    "Paste Here",
-    
-]
+import os
+from dotenv import load_dotenv
 
+load_dotenv()  # reads .env in this folder and loads its values
+
+
+def _get_env_list(key: str) -> list:
+    """Reads a comma-separated env var into a list.
+    e.g. GROQ_API_KEYS=key1,key2 -> ["key1", "key2"]"""
+    raw = os.getenv(key, "")
+    return [k.strip() for k in raw.split(",") if k.strip()]
+
+
+GROQ_API_KEYS = _get_env_list("GROQ_API_KEYS")
 
 # Which model to use by default. See orchestrator.py for notes on alternatives.
-MODEL = "openai/gpt-oss-120b"
+MODEL = os.getenv("JARVIS_MODEL", "openai/gpt-oss-120b")
 
 # --- Optional: Telegram integration ---
-# Get free credentials at https://my.telegram.org/apps (login with your phone
-# number, create an app -- 2 minutes). Leave blank to skip Telegram entirely;
-# Jarvis runs fine without it.
-TELEGRAM_API_ID = #paste
-          # your real api_id, as a number, no quotes
-TELEGRAM_API_HASH = "Paste here"
+_telegram_id_raw = os.getenv("TELEGRAM_API_ID", "")
+TELEGRAM_API_ID = int(_telegram_id_raw) if _telegram_id_raw.isdigit() else None
+TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH", "")
 
-
-WEATHER_API_KEY = "paste here"
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY", "")

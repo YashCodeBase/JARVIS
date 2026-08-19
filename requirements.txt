@@ -6,3 +6,4 @@ faster-whisper
 piper-tts
 ddgs
 telethon
+python-dotenv
