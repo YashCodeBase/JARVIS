@@ -33,3 +33,18 @@ TELEGRAM_API_ID = int(_telegram_id_raw) if _telegram_id_raw.isdigit() else None
 TELEGRAM_API_HASH = os.getenv("TELEGRAM_API_HASH", "")
 
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY", "")
+
+
+
+
+# --- Web login ---
+FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "")
+JARVIS_PASSWORD = os.getenv("JARVIS_PASSWORD", "")
+
+
+
+
+# --- WebAuthn (Face/Fingerprint device login) ---
+# This MUST be your Tailscale hostname, no "https://" prefix and no port number.
+RP_ID = "jarvis.taildd8ebf.ts.net"
+RP_NAME = "Jarvis"

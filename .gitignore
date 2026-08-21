@@ -25,3 +25,16 @@ env/
 
 # Logs
 *.log
+*.crt
+*.key
+webauthn_credential.json
+webauthn_credential.json
+
+
+
+
+
+
+*.pem
+*.crt
+*.key

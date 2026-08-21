@@ -7,3 +7,5 @@ piper-tts
 ddgs
 telethon
 python-dotenv
+flask
+webauthn

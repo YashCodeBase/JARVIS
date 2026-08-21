@@ -10,6 +10,8 @@ import json
 from groq_client import chat_completion
 from skills import registry
 import config
+import memory
+
 
 MODEL = config.MODEL
 TODAY = datetime.date.today().isoformat()
@@ -40,11 +42,17 @@ the user asked to see something written out."""
 class Orchestrator:
     def __init__(self, model: str = MODEL):
         self.model = model
+        memory.init_db()
         self.history: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
-
+    
     def handle(self, user_text: str) -> str:
+        # Refresh system prompt with the latest known facts before every message,
+        # in case new facts were saved since the last one.
+        self.history[0] = {
+            "role": "system",
+            "content": SYSTEM_PROMPT + memory.build_memory_block(),
+        }
         self.history.append({"role": "user", "content": user_text})
-
         # Cap the loop so a confused model can't spin forever
         for _ in range(8):
             response = chat_completion(
@@ -56,9 +64,10 @@ class Orchestrator:
             message = response.choices[0].message
 
             if not message.tool_calls:
+                reply = (message.content or "").strip()
                 self.history.append({"role": "assistant", "content": message.content or ""})
-                return (message.content or "").strip()
-
+                memory.extract_and_save_facts(user_text, reply)
+                return reply
             self.history.append(
                 {
                     "role": "assistant",
