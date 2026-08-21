@@ -82,11 +82,16 @@ def build_memory_block() -> str:
     return (
         "\n\nHere is what you already know about the user from past "
         f"conversations:\n{bullet_list}\n\n"
-        "Use these naturally if relevant. Don't recite this list back "
-        "to the user or mention that you have a memory file -- just act "
-        "like you remember them."
+        "IMPORTANT: Treat these as settled preferences, not guesses. If a "
+        "known fact answers part of the user's request (e.g. a preferred "
+        "color, brand, size, option, or way of doing something), apply it "
+        "automatically and proceed -- do NOT ask the user to confirm or "
+        "re-state something you already know. Only ask a clarifying "
+        "question if the request needs information you genuinely don't "
+        "have yet. Don't recite this list back to the user or mention "
+        "that you have a memory file -- just act like you remember them, "
+        "the same way a long-time assistant would."
     )
-
 
 _EXTRACTION_SYSTEM_PROMPT = """You extract durable, worth-remembering facts \
 about a user from a single conversation turn.
