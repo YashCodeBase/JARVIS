@@ -80,6 +80,14 @@ def index():
     return render_template("index.html")
 
 
+
+@app.route("/settings")
+@login_required
+def settings():
+    return render_template("settings.html")
+
+
+
 @app.route("/api/chat", methods=["POST"])
 @login_required
 def chat():

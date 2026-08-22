@@ -1,0 +1,388 @@
+:root {
+  --bg: #05070a;
+  --panel: #0d1117;
+  --accent: #4fd1ff;
+  --accent-dim: #1c4b5c;
+  --danger: #ff6b6b;
+  --text: #e6f1f5;
+  --text-dim: #7f97a3;
+
+  /* State colors -- each JARVIS mode gets its own identity */
+  --c-ready: #4fd1ff;
+  --c-listening: #ff5470;
+  --c-thinking: #9b7bff;
+  --c-speaking: #2de8b0;
+
+  /* Active state color, swapped by [data-state] below */
+  --state: var(--c-ready);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image:
+    radial-gradient(ellipse 900px 500px at 50% -10%, rgba(79,209,255,0.06), transparent 60%),
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: auto, 42px 42px, 42px 42px;
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Header ---------- */
+header {
+  padding: 14px 20px 0;
+  border-bottom: 1px solid var(--accent-dim);
+}
+.headerTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  flex-wrap: wrap;
+}
+header h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  letter-spacing: 5px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--accent);
+}
+
+.modeToggle {
+  display: flex;
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-left: 12px;
+}
+.modeBtn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 8px 10px;
+  cursor: pointer;
+  border-right: 1px solid var(--accent-dim);
+  transition: background 0.2s, color 0.2s;
+}
+.modeBtn:last-child { border-right: none; }
+.modeBtn:hover { color: var(--text); }
+.modeBtn.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+#muteBtn, #registerBtn {
+  background: none;
+  border: 1px solid var(--accent-dim);
+  color: var(--text-dim);
+  height: 32px;
+  border-radius: 8px;
+  font-size: 12px;
+  padding: 0 10px;
+  transition: border-color 0.2s, color 0.2s;
+}
+#muteBtn:hover, #registerBtn:hover { border-color: var(--accent); color: var(--text); }
+#muteBtn { width: 32px; padding: 0; font-size: 14px; margin-left: auto; }
+#muteBtn.active { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- Orb ---------- */
+.orbZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 16px;
+}
+.orbWrap {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.orbHalo {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--state) 0%, transparent 70%);
+  opacity: 0.35;
+  filter: blur(6px);
+  animation: breathe 4s ease-in-out infinite;
+  transition: background 0.4s;
+}
+.orbRing {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  border: 2px dashed var(--state);
+  opacity: 0.6;
+  animation: spin 12s linear infinite;
+  transition: border-color 0.4s;
+}
+.orbCore {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff, var(--state) 55%, var(--state) 100%);
+  box-shadow: 0 0 20px var(--state), 0 0 40px var(--state);
+  animation: corePulse 4s ease-in-out infinite;
+  transition: background 0.4s, box-shadow 0.4s;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.15); opacity: 0.5; }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes corePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+/* State: LISTENING -- faster, tighter pulse, urgent color */
+.orbWrap[data-state="LISTENING"] .orbRing { animation-duration: 3s; }
+.orbWrap[data-state="LISTENING"] .orbCore { animation: corePulse 0.9s ease-in-out infinite; }
+.orbWrap[data-state="LISTENING"] .orbHalo { animation-duration: 1.2s; }
+
+/* State: THINKING -- fast spin, processing feel */
+.orbWrap[data-state="THINKING"] .orbRing { animation-duration: 1.4s; }
+.orbWrap[data-state="THINKING"] .orbCore { animation: corePulse 0.6s ease-in-out infinite; }
+
+/* State: SPEAKING -- steady glow, waveform does the talking */
+.orbWrap[data-state="SPEAKING"] .orbRing { animation-duration: 6s; }
+.orbWrap[data-state="SPEAKING"] .orbCore { animation: corePulse 2s ease-in-out infinite; }
+
+.statusText {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--state);
+  transition: color 0.4s;
+}
+
+/* ---------- Waveform (only meaningful during SPEAKING) ---------- */
+.waveform {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 16px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.waveform.active { opacity: 1; }
+.waveform span {
+  width: 3px;
+  border-radius: 2px;
+  background: var(--c-speaking);
+  animation: wave 1s ease-in-out infinite;
+}
+.waveform span:nth-child(1) { animation-delay: 0s; }
+.waveform span:nth-child(2) { animation-delay: 0.1s; }
+.waveform span:nth-child(3) { animation-delay: 0.2s; }
+.waveform span:nth-child(4) { animation-delay: 0.3s; }
+.waveform span:nth-child(5) { animation-delay: 0.15s; }
+@keyframes wave {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+
+/* ---------- Chat ---------- */
+#chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.msg {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  line-height: 1.4;
+  font-size: 14px;
+  white-space: pre-wrap;
+  animation: rise 0.25s ease-out;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.user { align-self: flex-end; background: var(--accent-dim); color: var(--text); }
+.jarvis { align-self: flex-start; background: var(--panel); border: 1px solid var(--accent-dim); color: var(--text); }
+
+/* ---------- Input bar ---------- */
+#inputBar {
+  display: flex;
+  padding: 16px;
+  gap: 10px;
+  border-top: 1px solid var(--accent-dim);
+}
+#textInput {
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid var(--accent-dim);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+#textInput:focus { border-color: var(--accent); }
+button {
+  background: var(--accent);
+  color: #001018;
+  border: none;
+  padding: 0 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+button:disabled { opacity: 0.5; cursor: default; }
+#micBtn {
+  width: 44px; padding: 0; font-size: 18px; flex-shrink: 0;
+  transition: background 0.2s;
+}
+#micBtn.listening { background: var(--c-listening); animation: micPulse 1s infinite; }
+@keyframes micPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbHalo, .orbRing, .orbCore, .waveform span, #micBtn.listening, .msg {
+    animation: none !important;
+  }
+}
+
+
+
+/* ---------- Gesture debug label (Phase B) ---------- */
+#gestureDebug {
+  background: var(--panel);
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+
+
+/* ---------- Settings page ---------- */
+#backLink {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  margin-right: 14px;
+  transition: color 0.2s;
+}
+#backLink:hover { color: var(--accent); }
+
+#settingsBody {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+.settingsSection {
+  max-width: 480px;
+  margin: 0 auto;
+}
+.settingsSection h2 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.settingsHint {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+.gestureOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.gestureOption {
+  background: var(--panel);
+  border: 1px solid var(--accent-dim);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 18px 10px;
+  font-size: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.gestureOption span {
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+.gestureOption:hover { border-color: var(--accent); }
+.gestureOption.active {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.gestureOption.active span { color: var(--accent); }
+
+
+/* ---------- Settings link on main page ---------- */
+#settingsLink {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  transition: color 0.2s, border-color 0.2s;
+}
+#settingsLink:hover { color: var(--accent); border-color: var(--accent); }
+
+
+
+/* ---------- Gesture feature on/off toggle ---------- */
+.toggleBtn {
+  background: var(--panel);
+  border: 1px solid var(--accent-dim);
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.toggleBtn[data-enabled="true"] {
+  border-color: var(--c-speaking);
+  color: var(--c-speaking);
+  background: rgba(45, 232, 176, 0.08);
+}

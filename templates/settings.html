@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JARVIS — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header>
+    <div class="headerTop">
+      <a href="{{ url_for('index') }}" id="backLink" title="Back to JARVIS">&larr; Back</a>
+      <h1>SETTINGS</h1>
+    </div>
+  </header>
+
+  <div id="settingsBody">
+    <section class="settingsSection">
+      <h2>Gesture Mic Feature</h2>
+      <p class="settingsHint">Turns on your webcam in the background to detect hand gestures. Off by default.</p>
+      <button id="gestureToggle" class="toggleBtn" data-enabled="false">OFF</button>
+    </section>
+    <section class="settingsSection">
+      <h2>Gesture Mic Trigger</h2>
+      <p class="settingsHint">Choose which hand gesture forces JARVIS to keep listening.</p>
+      <div class="gestureOptions" id="gestureOptions">
+        <button class="gestureOption" data-gesture="PEACE">✌️<span>Peace</span></button>
+        <button class="gestureOption" data-gesture="THUMBS_UP">👍<span>Thumbs Up</span></button>
+        <button class="gestureOption" data-gesture="FIST">✊<span>Fist</span></button>
+        <button class="gestureOption" data-gesture="SHAKA">🤙<span>Shaka</span></button>
+      </div>
+    </section>
+  </div>
+
+<script type="module" src="{{ url_for('static', filename='js/settings.js') }}"></script>
+</body>
+</html>
