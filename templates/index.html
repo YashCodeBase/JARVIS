@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JARVIS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser/dist/bundle/index.umd.min.js"></script>
 <style>
   :root {
@@ -14,51 +17,50 @@
     --danger: #ff6b6b;
     --text: #e6f1f5;
     --text-dim: #7f97a3;
+
+    /* State colors -- each JARVIS mode gets its own identity */
+    --c-ready: #4fd1ff;
+    --c-listening: #ff5470;
+    --c-thinking: #9b7bff;
+    --c-speaking: #2de8b0;
+
+    /* Active state color, swapped by [data-state] below */
+    --state: var(--c-ready);
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(79,209,255,0.06), transparent 60%),
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: auto, 42px 42px, 42px 42px;
     color: var(--text);
     font-family: 'Segoe UI', system-ui, sans-serif;
     height: 100vh;
     display: flex;
     flex-direction: column;
   }
+
+  /* ---------- Header ---------- */
   header {
-    padding: 16px 20px;
+    padding: 14px 20px 0;
     border-bottom: 1px solid var(--accent-dim);
+  }
+  .headerTop {
     display: flex;
     align-items: center;
     gap: 10px;
-  }
-  .dot {
-    width: 10px; height: 10px; border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 8px var(--accent), 0 0 16px var(--accent);
-    transition: background 0.2s, box-shadow 0.2s;
-  }
-  .dot.listening {
-    background: var(--danger);
-    box-shadow: 0 0 8px var(--danger), 0 0 16px var(--danger);
-    animation: pulse 1s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+    padding-bottom: 12px;
   }
   header h1 {
-    font-size: 16px;
-    letter-spacing: 4px;
-    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 5px;
+    font-weight: 700;
     margin: 0;
     color: var(--accent);
-  }
-  .status {
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-    margin-left: auto;
   }
   #muteBtn, #registerBtn {
     background: none;
@@ -68,9 +70,117 @@
     border-radius: 8px;
     font-size: 12px;
     padding: 0 10px;
+    transition: border-color 0.2s, color 0.2s;
   }
-  #muteBtn { width: 32px; padding: 0; font-size: 14px; }
+  #muteBtn:hover, #registerBtn:hover { border-color: var(--accent); color: var(--text); }
+  #muteBtn { width: 32px; padding: 0; font-size: 14px; margin-left: auto; }
   #muteBtn.active { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- Orb ---------- */
+  .orbZone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 16px;
+  }
+  .orbWrap {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .orbHalo {
+    position: absolute;
+    inset: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--state) 0%, transparent 70%);
+    opacity: 0.35;
+    filter: blur(6px);
+    animation: breathe 4s ease-in-out infinite;
+    transition: background 0.4s;
+  }
+  .orbRing {
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    border: 2px dashed var(--state);
+    opacity: 0.6;
+    animation: spin 12s linear infinite;
+    transition: border-color 0.4s;
+  }
+  .orbCore {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffffff, var(--state) 55%, var(--state) 100%);
+    box-shadow: 0 0 20px var(--state), 0 0 40px var(--state);
+    animation: corePulse 4s ease-in-out infinite;
+    transition: background 0.4s, box-shadow 0.4s;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.15); opacity: 0.5; }
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes corePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  /* State: LISTENING -- faster, tighter pulse, urgent color */
+  .orbWrap[data-state="LISTENING"] .orbRing { animation-duration: 3s; }
+  .orbWrap[data-state="LISTENING"] .orbCore { animation: corePulse 0.9s ease-in-out infinite; }
+  .orbWrap[data-state="LISTENING"] .orbHalo { animation-duration: 1.2s; }
+
+  /* State: THINKING -- fast spin, processing feel */
+  .orbWrap[data-state="THINKING"] .orbRing { animation-duration: 1.4s; }
+  .orbWrap[data-state="THINKING"] .orbCore { animation: corePulse 0.6s ease-in-out infinite; }
+
+  /* State: SPEAKING -- steady glow, waveform does the talking */
+  .orbWrap[data-state="SPEAKING"] .orbRing { animation-duration: 6s; }
+  .orbWrap[data-state="SPEAKING"] .orbCore { animation: corePulse 2s ease-in-out infinite; }
+
+  .statusText {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--state);
+    transition: color 0.4s;
+  }
+
+  /* ---------- Waveform (only meaningful during SPEAKING) ---------- */
+  .waveform {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 16px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .waveform.active { opacity: 1; }
+  .waveform span {
+    width: 3px;
+    border-radius: 2px;
+    background: var(--c-speaking);
+    animation: wave 1s ease-in-out infinite;
+  }
+  .waveform span:nth-child(1) { animation-delay: 0s; }
+  .waveform span:nth-child(2) { animation-delay: 0.1s; }
+  .waveform span:nth-child(3) { animation-delay: 0.2s; }
+  .waveform span:nth-child(4) { animation-delay: 0.3s; }
+  .waveform span:nth-child(5) { animation-delay: 0.15s; }
+  @keyframes wave {
+    0%, 100% { height: 4px; }
+    50% { height: 16px; }
+  }
+
+  /* ---------- Chat ---------- */
   #chat {
     flex: 1;
     overflow-y: auto;
@@ -86,9 +196,16 @@
     line-height: 1.4;
     font-size: 14px;
     white-space: pre-wrap;
+    animation: rise 0.25s ease-out;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   .user { align-self: flex-end; background: var(--accent-dim); color: var(--text); }
   .jarvis { align-self: flex-start; background: var(--panel); border: 1px solid var(--accent-dim); color: var(--text); }
+
+  /* ---------- Input bar ---------- */
   #inputBar {
     display: flex;
     padding: 16px;
@@ -104,6 +221,7 @@
     border-radius: 8px;
     font-size: 14px;
     outline: none;
+    transition: border-color 0.2s;
   }
   #textInput:focus { border-color: var(--accent); }
   button {
@@ -117,17 +235,41 @@
     font-size: 14px;
   }
   button:disabled { opacity: 0.5; cursor: default; }
-  #micBtn { width: 44px; padding: 0; font-size: 18px; flex-shrink: 0; }
-  #micBtn.listening { background: var(--danger); animation: pulse 1s infinite; }
+  #micBtn {
+    width: 44px; padding: 0; font-size: 18px; flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  #micBtn.listening { background: var(--c-listening); animation: micPulse 1s infinite; }
+  @keyframes micPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .orbHalo, .orbRing, .orbCore, .waveform span, #micBtn.listening, .msg {
+      animation: none !important;
+    }
+  }
 </style>
 </head>
 <body>
   <header>
-    <div class="dot" id="statusDot"></div>
-    <h1>J A R V I S</h1>
-    <span class="status" id="statusText">READY</span>
-    <button id="registerBtn" title="Register this device for Face/Fingerprint login">Register Device</button>
-    <button id="muteBtn" title="Toggle voice replies">🔊</button>
+    <div class="headerTop">
+      <h1>J A R V I S</h1>
+      <button id="registerBtn" title="Register this device for Face/Fingerprint login">Register Device</button>
+      <button id="muteBtn" title="Toggle voice replies">🔊</button>
+    </div>
+    <div class="orbZone">
+      <div class="orbWrap" id="orbWrap" data-state="READY">
+        <div class="orbHalo"></div>
+        <div class="orbRing"></div>
+        <div class="orbCore"></div>
+      </div>
+      <div class="waveform" id="waveform">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="statusText" id="statusText">READY</div>
+    </div>
   </header>
   <div id="chat"></div>
   <div id="inputBar">
@@ -144,13 +286,15 @@ const micBtn = document.getElementById('micBtn');
 const muteBtn = document.getElementById('muteBtn');
 const registerBtn = document.getElementById('registerBtn');
 const statusText = document.getElementById('statusText');
-const statusDot = document.getElementById('statusDot');
+const orbWrap = document.getElementById('orbWrap');
+const waveform = document.getElementById('waveform');
 
 let voiceMuted = false;
 
 function setStatus(state) {
   statusText.textContent = state;
-  statusDot.classList.toggle('listening', state === 'LISTENING');
+  orbWrap.dataset.state = state;
+  waveform.classList.toggle('active', state === 'SPEAKING');
 }
 
 function addMessage(text, who) {
