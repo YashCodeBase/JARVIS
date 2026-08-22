@@ -15,6 +15,7 @@ import memory
 
 MODEL = config.MODEL
 TODAY = datetime.date.today().isoformat()
+MAX_HISTORY_MESSAGES = 16  # keep the last ~8 exchanges; older context is covered by memory.py
 
 SYSTEM_PROMPT = f"""You are Jarvis, a personal automation assistant running on the \
 user's own computer. Today's date is {TODAY}.
@@ -52,6 +53,14 @@ class Orchestrator:
             "role": "system",
             "content": SYSTEM_PROMPT + memory.build_memory_block(),
         }
+
+        # Keep the conversation from growing forever. We only need recent
+        # back-and-forth for context -- anything important long-term is
+        # already saved permanently by memory.py, so trimming old messages
+        # here doesn't lose anything that matters.
+        if len(self.history) > MAX_HISTORY_MESSAGES + 1:
+            self.history = [self.history[0]] + self.history[-MAX_HISTORY_MESSAGES:]
+
         self.history.append({"role": "user", "content": user_text})
         # Cap the loop so a confused model can't spin forever
         for _ in range(8):
