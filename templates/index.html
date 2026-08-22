@@ -53,6 +53,7 @@
     align-items: center;
     gap: 10px;
     padding-bottom: 12px;
+    flex-wrap: wrap;
   }
   header h1 {
     font-family: 'JetBrains Mono', monospace;
@@ -62,6 +63,33 @@
     margin: 0;
     color: var(--accent);
   }
+
+  .modeToggle {
+    display: flex;
+    border: 1px solid var(--accent-dim);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-left: 12px;
+  }
+  .modeBtn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px 10px;
+    cursor: pointer;
+    border-right: 1px solid var(--accent-dim);
+    transition: background 0.2s, color 0.2s;
+  }
+  .modeBtn:last-child { border-right: none; }
+  .modeBtn:hover { color: var(--text); }
+  .modeBtn.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
   #muteBtn, #registerBtn {
     background: none;
     border: 1px solid var(--accent-dim);
@@ -256,6 +284,11 @@
   <header>
     <div class="headerTop">
       <h1>J A R V I S</h1>
+      <div class="modeToggle" id="modeToggle">
+        <button class="modeBtn" data-mode="fast" title="Always fast, simpler answers">FAST</button>
+        <button class="modeBtn active" data-mode="auto" title="Fast by default, upgrades for complex questions">AUTO</button>
+        <button class="modeBtn" data-mode="deep" title="Always best reasoning, slower">DEEP</button>
+      </div>
       <button id="registerBtn" title="Register this device for Face/Fingerprint login">Register Device</button>
       <button id="muteBtn" title="Toggle voice replies">🔊</button>
     </div>
@@ -288,8 +321,17 @@ const registerBtn = document.getElementById('registerBtn');
 const statusText = document.getElementById('statusText');
 const orbWrap = document.getElementById('orbWrap');
 const waveform = document.getElementById('waveform');
+const modeToggle = document.getElementById('modeToggle');
 
 let voiceMuted = false;
+let chatMode = 'auto';
+
+modeToggle.addEventListener('click', (e) => {
+  const btn = e.target.closest('.modeBtn');
+  if (!btn) return;
+  chatMode = btn.dataset.mode;
+  document.querySelectorAll('.modeBtn').forEach(b => b.classList.toggle('active', b === btn));
+});
 
 function setStatus(state) {
   statusText.textContent = state;
@@ -328,7 +370,7 @@ async function sendMessage(text) {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: messageText })
+      body: JSON.stringify({ message: messageText, mode: chatMode })
     });
     const data = await res.json();
     const replyText = data.reply || '(no response)';

@@ -85,11 +85,11 @@ def index():
 def chat():
     data = request.get_json(silent=True) or {}
     user_text = (data.get("message") or "").strip()
+    mode = (data.get("mode") or "auto").strip()
     if not user_text:
         return jsonify({"error": "empty message"}), 400
-    reply = orch.handle(user_text)
+    reply = orch.handle(user_text, mode=mode)
     return jsonify({"reply": reply})
-
 
 # --- WebAuthn: device registration (Step 3b-i) ---
 

@@ -17,6 +17,38 @@ MODEL = config.MODEL
 TODAY = datetime.date.today().isoformat()
 MAX_HISTORY_MESSAGES = 16  # keep the last ~8 exchanges; older context is covered by memory.py
 
+# Two-tier model routing: FAST for quick/simple requests, DEEP for
+# anything that needs real reasoning. AUTO mode picks between them
+# per-message using a zero-latency heuristic (no extra API call).
+FAST_MODEL = "openai/gpt-oss-20b"
+DEEP_MODEL = "openai/gpt-oss-120b"
+
+_COMPLEXITY_KEYWORDS = (
+    "why", "explain", "compare", "analyze", "analyse", "plan", "strategy",
+    "pros and cons", "difference between", "how does", "step by step",
+    "recommend", "should i", "which is better",
+)
+
+
+def choose_model(user_text: str, mode: str = "auto") -> str:
+    """Decides which model to use for a given message and mode.
+    mode is one of: 'fast', 'deep', 'auto'."""
+    mode = (mode or "auto").lower()
+    if mode == "fast":
+        return FAST_MODEL
+    if mode == "deep":
+        return DEEP_MODEL
+
+    # auto: fall back to a heuristic
+    text = (user_text or "").strip()
+    if len(text.split()) > 40:
+        return DEEP_MODEL
+    lowered = text.lower()
+    if any(keyword in lowered for keyword in _COMPLEXITY_KEYWORDS):
+        return DEEP_MODEL
+    return FAST_MODEL
+
+
 SYSTEM_PROMPT = f"""You are Jarvis, a personal automation assistant running on the \
 user's own computer. Today's date is {TODAY}.
 
@@ -46,7 +78,8 @@ class Orchestrator:
         memory.init_db()
         self.history: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
     
-    def handle(self, user_text: str) -> str:
+    def handle(self, user_text: str, mode: str = "auto") -> str:
+        active_model = choose_model(user_text, mode)
         # Refresh system prompt with the latest known facts before every message,
         # in case new facts were saved since the last one.
         self.history[0] = {
@@ -65,7 +98,7 @@ class Orchestrator:
         # Cap the loop so a confused model can't spin forever
         for _ in range(8):
             response = chat_completion(
-                model=self.model,
+                model=active_model,
                 messages=self.history,
                 tools=registry.openai_tool_schemas(),
                 tool_choice="auto",
